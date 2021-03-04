@@ -34,6 +34,10 @@ sed -i "/build_nv_headers()/i }\n" ${script_name}
 sed -i "/build_nv_headers$/a build_opencl" ${script_name}
 sed -i "s/--enable-opengl/--enable-opencl --enable-opengl/g" ${script_name}
 
+# trim prefix
+sed -i "s/cross_prefix=\"\$mingw_bin_path\//cross_prefix=\"/g" ${script_name}
+sed -i "s/--prefix=\${postpend_prefix}//g" ${script_name}
+
 ./${script_name} \
   --ffmpeg-git-checkout-version=n4.3.2 \
   --x265-git-checkout-version=Release_3.5 \
@@ -44,3 +48,16 @@ sed -i "s/--enable-opengl/--enable-opencl --enable-opengl/g" ${script_name}
   --compiler-flavors=win64 \
   --prefer-stable=y \
   --enable-gpl=y
+
+echo "
+./${script_name} \\
+  --ffmpeg-git-checkout-version=n4.3.2 \\
+  --x265-git-checkout-version=Release_3.5 \\
+  --fdk-aac-git-checkout-version=v2.0.1 \\
+  --gcc-cpu-count=$(nproc) \\
+  --disable-nonfree=n \\
+  --build-lsw=y \\
+  --compiler-flavors=win64 \\
+  --prefer-stable=y \\
+  --enable-gpl=y
+"
