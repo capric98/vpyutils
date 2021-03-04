@@ -3,7 +3,7 @@
 
 EXVERSION=ffmpeg-windows-build-helpers_withOpenCL
 
-# gendef command for libOpenCL.a
+# gendef command for OpenCL$bits_target.def
 apt-get install -y mingw-w64-tools
 
 git clone https://github.com/rdp/ffmpeg-windows-build-helpers.git
@@ -32,7 +32,7 @@ sed -i "/build_nv_headers()/i \ \ cd .." ${script_name}
 sed -i "/build_nv_headers()/i }\n" ${script_name}
 
 sed -i "/build_nv_headers$/a build_opencl" ${script_name}
-sed -i "s/--enable-opengl/--enable-opengl --enable-opencl/g" ${script_name}
+sed -i "s/--enable-opengl/--enable-opencl --enable-opengl/g" ${script_name}
 
 ./${script_name} \
   --ffmpeg-git-checkout-version=n4.3.2 \
