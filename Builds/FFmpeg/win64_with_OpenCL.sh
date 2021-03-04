@@ -35,7 +35,7 @@ sed -i "/build_nv_headers$/a build_opencl" ${script_name}
 sed -i "s/--enable-opengl/--enable-opencl --enable-opengl/g" ${script_name}
 
 # trim prefix
-sed -i "s/cross_prefix=\"\$mingw_bin_path\//cross_prefix=\"/g" ${script_name}
+sed -i "s/init_options+=\" --arch=\$arch --target-os=mingw32 --cross-prefix=\$cross_prefix\"/init_options+=\" --arch=\$arch --target-os=mingw32 --cross-prefix=\${cross_prefix#\"\$mingw_bin_path\/\"}\"/g" ${script_name}
 sed -i "s/--prefix=\${postpend_prefix}//g" ${script_name}
 
 ./${script_name} \
