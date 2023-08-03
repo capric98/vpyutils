@@ -30,7 +30,7 @@ if __name__=="__main__":
     _check_env()
 
     parser = argparse.ArgumentParser(
-        prog="gif_generate.py",
+        prog="gif-generate.py",
         description="generate gif from video file",
         epilog="_(:з」∠)_",
     )
