@@ -6,6 +6,7 @@
 #   Scripts: xxx
 
 import os
+
 from datetime import timedelta
 from math import ceil
 
@@ -91,12 +92,29 @@ def deinterlace(clip: vs.VideoNode, divide: bool = True, TFF: bool = True, prese
     return clip
 
 
+def IVTC(clip: vs.VideoNode) -> vs.VideoNode:
+    import mvsfunc  as mvf
+    import havsfunc as haf
+    core = vs.core
+
+    if clip.format.color_family is not vs.ColorFamily.YUV:
+        if clip.format.subsampling_w + clip.format.subsampling_h:
+            clip = core.fmtc.resample(clip=clip, css="444")
+        clip = core.fmtc.matrix(clip=clip, col_fam=vs.ColorFamily.YUV, matd="709")
+
+    if clip.format.bits_per_sample != 8:
+        clip = core.fmtc.bitdepth(clip, bits=8, dmode=1) # no dither
+
+    return mvf.FilterCombed(core.vivtc.VFM(clip, order=0, mode=5, cthresh=6, mi=64),
+        haf.QTGMC(clip, TFF=True, FPSDivisor=2, Preset="slow", FftThreads=8)).vivtc.VDecimate()
+
+
 def deband(clip: vs.VideoNode) -> vs.VideoNode:
     import mvsfunc as mvf
     core = vs.core
 
-    pass1 = core.f3kdb.Deband(clip,  8, 48, 48, 48, 0, 0, output_depth=16)
-    pass2 = core.f3kdb.Deband(pass1,16, 32, 32, 32, 0, 0, output_depth=16)
+    pass1 = core.neo_f3kdb.Deband(clip,  8, 48, 48, 48, 0, 0, output_depth=16)
+    pass2 = core.neo_f3kdb.Deband(pass1,16, 32, 32, 32, 0, 0, output_depth=16)
     return mvf.LimitFilter(pass2, clip, thr=0.4, thrc=0.3, elast=3.0)
 
 
@@ -125,6 +143,21 @@ def subtitle(clip: vs.VideoNode, file: str, accurate: bool = False) -> vs.VideoN
             clip = core.fmtc.resample(clip=clip, css="420")
 
     return core.vsfm.TextSubMod(clip=clip, file=file, accurate=int(accurate))
+
+
+def eedi3_rpow2(clip: vs.VideoNode) -> vs.VideoNode:
+    core = vs.core
+    clip = core.eedi3m.EEDI3(clip, field=1, dh=True).std.Transpose()
+    clip = core.eedi3m.EEDI3(clip, field=1, dh=True).std.Transpose()
+    return clip
+def eedi2_rpow2(clip: vs.VideoNode) -> vs.VideoNode:
+    core = vs.core
+    clip = core.eedi2.EEDI2(clip, field=1, mthresh=10, lthresh=20, vthresh=20, maxd=24, nt=50).std.Transpose()
+    clip = core.eedi2.EEDI2(clip, field=1, mthresh=10, lthresh=20, vthresh=20, maxd=24, nt=50).std.Transpose()
+    return clip
+def eedin_resize(clip, width, height, rpow2_func=eedi3_rpow2) -> vs.VideoNode:
+    clipx2 = rpow2_func(clip)
+    return clipx2.fmtc.resample(width, height, kernel="spline64")
 
 
 def set_output(clip: vs.VideoNode, depth: int = 8, index: int = 0):
