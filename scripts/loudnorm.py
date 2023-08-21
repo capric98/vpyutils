@@ -1,4 +1,4 @@
-#!/usr/local/env python3
+#!/usr/bin/env python3
 # coding: utf-8
 import argparse
 import json
@@ -40,12 +40,15 @@ def loudnorm(input_fn, output_fn, args):
         mtp     = measure["input_tp"]
         mthresh = measure["input_thresh"]
 
-        subprocess.run([
+        fargs = [
             __FFMPEG__, "-hide_banner", "-loglevel", "info", "-nostats",
             "-i", input_fn,
             "-af", f"loudnorm=I={args.LUFS}:LRA={args.LRA}:TP={args.TP}:measured_I={mi}:measured_LRA={mlra}:measured_TP={mtp}:measured_thresh={mthresh}",
-            "-c:v", "copy", "-c:a", args.encoder, "-ab", args.bitrate, "-y", output_fn,
-        ], capture_output=True)
+            "-c:v", "copy", "-c:a", args.encoder,
+        ]
+        if args.bitrate: fargs += ["-ab", args.bitrate]
+        if args.sample: fargs += ["-ar", args.sample]
+        subprocess.run(fargs + ["-y", output_fn], capture_output=True)
 
 
 if __name__=="__main__":
@@ -62,10 +65,11 @@ if __name__=="__main__":
     parser.add_argument("-l", "--LRA", type=float, help="loudness range", default=7.0)
     parser.add_argument("-t", "--TP", type=float, help="true peak loudness", default=-1.0)
     parser.add_argument("-e", "--encoder", type=str, help="audio encoder", default="aac")
-    parser.add_argument("-b", "--bitrate", type=str, help="audio bitrates", default="192k")
+    parser.add_argument("-r", "--sample", type=str, help="audio sample rate", default="44100")
+    parser.add_argument("-b", "--bitrate", type=str, help="audio bitrates", default=None)
 
     args = parser.parse_args()
-    # print(args)
+    if args.encoder=="aac" and not args.bitrate: args.bitrate="192k"
 
     for fn in args.video_fn:
         ps = os.path.splitext(fn)
