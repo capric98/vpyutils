@@ -25,7 +25,7 @@ def loudnorm(input_fn, output_fn, args):
         "-vn", "-af", "loudnorm=print_format=json", "-f", "null", output_fn,
     ], capture_output=True)
 
-    stderr = ex.stderr.decode("utf-8")
+    stderr = ex.stderr.decode("utf-8", errors="ignore")
     r = re.search(r"\[Parsed_loudnorm.*?\]", stderr)
     if not r:
         print("ffmpeg gives unexpected output as:")
@@ -42,9 +42,9 @@ def loudnorm(input_fn, output_fn, args):
 
         fargs = [
             __FFMPEG__, "-hide_banner", "-loglevel", "info", "-nostats",
-            "-i", input_fn,
+            "-i", input_fn, "-map", "0",
             "-af", f"loudnorm=I={args.LUFS}:LRA={args.LRA}:TP={args.TP}:measured_I={mi}:measured_LRA={mlra}:measured_TP={mtp}:measured_thresh={mthresh}",
-            "-c:v", "copy", "-c:a", args.encoder,
+            "-c:v", "copy", "-c:s", "copy", "-c:a", args.encoder,
         ]
         if args.bitrate: fargs += ["-ab", args.bitrate]
         if args.sample: fargs += ["-ar", args.sample]
@@ -68,9 +68,20 @@ if __name__=="__main__":
     parser.add_argument("-r", "--sample", type=str, help="audio sample rate", default="44100")
     parser.add_argument("-b", "--bitrate", type=str, help="audio bitrates", default=None)
 
-    args = parser.parse_args()
-    if args.encoder=="aac" and not args.bitrate: args.bitrate="192k"
+    parser.add_argument("--category", type=str, help="torrent catagory", default="")
 
-    for fn in args.video_fn:
-        ps = os.path.splitext(fn)
-        loudnorm(fn, ps[0]+".norm"+ps[1], args)
+    args = parser.parse_args()
+    if args.encoder=="aac" and not args.bitrate: args.bitrate="320k"
+
+    if args.category=="sth":
+        for fn in args.video_fn:
+            if os.path.isfile(fn):
+                ps = os.path.splitext(fn)
+                loudnorm(fn, ps[0]+".norm"+ps[1], args)
+            elif os.path.isdir(fn):
+                pn = fn
+                for sfn in os.listdir(pn):
+                    fn = os.path.join(pn, sfn)
+                    if os.path.isfile(fn):
+                        ps = os.path.splitext(fn)
+                        loudnorm(fn, ps[0]+".norm"+ps[1], args)
