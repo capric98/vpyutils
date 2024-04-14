@@ -182,8 +182,8 @@ def set_output(clip: vs.VideoNode, depth: int = 8, index: int = 0):
         clip = core.fmtc.resample(clip=clip, css="420")
 
     if clip.format.bits_per_sample > depth:
-        # bright = mvf.Depth(clip , depth=depth, dither=0, ampo=0.5)
-        bright = mvf.Depth(clip , depth=depth, dither=1)
+        bright = mvf.Depth(clip , depth=depth, dither=0, ampo=0.5)
+        # bright = mvf.Depth(clip , depth=depth, dither=1)
         dark   = mvf.Depth(clip , depth=depth, dither=0, ampo=2)
         clip = core.std.MaskedMerge(dark, bright, core.std.Binarize(bright, 100, planes=0), first_plane=True)
 
