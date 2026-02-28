@@ -47,7 +47,7 @@ def loudnorm(input_fn, output_fn, args):
         fargs = [
             __FFMPEG__, "-hide_banner", "-loglevel", "info", "-nostats",
             "-i", input_fn, "-map", "0",
-            "-af", f"loudnorm=I={args.LUFS}:LRA={args.LRA}:TP={args.TP}:measured_I={mi}:measured_LRA={mlra}:measured_TP={mtp}:measured_thresh={mthresh}",
+            "-af", f"loudnorm=I={args.LUFS}:LRA={mlra}:TP={args.TP}:measured_I={mi}:measured_LRA={mlra}:measured_TP={mtp}:measured_thresh={mthresh}",
         ]
         fargs += ["-vn"] if args.no_video else ["-c:v", "copy"]
         fargs += ["-c:s", "copy", "-c:a", args.encoder]
@@ -69,7 +69,6 @@ if __name__=="__main__":
 
     parser.add_argument("video_fn", type=str, nargs="+")
     parser.add_argument("-i", "--LUFS", type=float, help="loudness target", default=-18.0)
-    parser.add_argument("-l", "--LRA", type=float, help="loudness range", default=7.0)
     parser.add_argument("-t", "--TP", type=float, help="true peak loudness", default=-1.0)
     parser.add_argument("-e", "--encoder", type=str, help="audio encoder", default="aac")
     parser.add_argument("-r", "--sample", type=str, help="audio sample rate", default="44100")
